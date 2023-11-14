@@ -1,6 +1,5 @@
 package com.mikayelovich.premium_indicators.core.binance;
 
-import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import org.slf4j.Logger;
@@ -14,6 +13,7 @@ public class BinanceWebSocketClient extends WebSocketClient {
     private static final Logger log = LoggerFactory.getLogger(BinanceWebSocketClient.class);
 
     private final Consumer<String> procedure;
+    private int counter = 0;
 
     public BinanceWebSocketClient(URI serverUri, Consumer<String> procedure) {
         super(serverUri);
@@ -28,7 +28,11 @@ public class BinanceWebSocketClient extends WebSocketClient {
     @Override
     public void onMessage(String message) {
         // Process message
-        log.debug("Received: " + message);
+        counter++;
+        if (counter > 1000) {
+            log.debug("Received: another thousand of actions");
+            counter = 0;
+        }
         procedure.accept(message);
     }
 

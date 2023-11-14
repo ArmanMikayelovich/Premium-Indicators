@@ -11,7 +11,6 @@ import java.util.Map;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-
 public class CalculationExpression {
    private  Formula formula;
     private  Map<String, List<? extends ExpressionArgument>> parameters;

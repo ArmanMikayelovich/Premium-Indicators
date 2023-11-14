@@ -25,7 +25,7 @@ public class PremiumIndicatorsCoreApplication {
  static {
 	 String s = License.geTermsOfAgreement();
 	 License.iConfirmNonCommercialUse(s);
-	 for (int i = 0; i < 1500000; i++) {
+	 for (int i = 0; i < 12; i++) {
 		 TradeUnitDTO tradeUnitDTO = new TradeUnitDTO();
 		 tradeUnitDTO.setPrice("2" + i);
 		 trades.add(tradeUnitDTO);

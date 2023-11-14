@@ -1,132 +1,158 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
+import {Box} from "@mui/material";
+import ModelList from "./ModelList";
+import ArgumentPaper from './argument/ArgumentPaper';
+import EntitySelector from './entitySelector/EntitySelector';
+import Divider from '@mui/material/Divider';
+
 
 function App() {
-  const [textInputs, setTextInputs] = useState(['']);
-  const [selectInputs, setSelectInputs] = useState(['']);
+    const [textInputs, setTextInputs] = useState(['']);
+    const [selectInputs, setSelectInputs] = useState(['']);
 
-  const handleTextInputChange = (e, index) => {
-    const newInputs = [...textInputs];
-    newInputs[index] = e.target.value;
-    setTextInputs(newInputs);
-  };
+    const [argumentPapers, setArgumentPapers] = useState([]); // State to store ArgumentPaper components
+    const [values, setValues] = useState({}); // State to store values
 
-  const addTextInput = () => {
-    setTextInputs([...textInputs, '']);
-  };
+    const addArgumentPaper = () => {
+        // Generate a unique key for each ArgumentPaper
+        const key = `argument-${Date.now()}`;
+        const newArgumentPaper = (<ArgumentPaper key={key} onValueChange={handleValueChange(key)}/>);
 
-  const handleSelectInputChange = (e, index) => {
-    const newInputs = [...selectInputs];
-    newInputs[index] = e.target.value;
-    setSelectInputs(newInputs);
-  };
+        // Update the values state with an empty object for the new ArgumentPaper
+        setValues((prevValues) => ({
+            ...prevValues, [key]: {},
+        }));
 
-  const addSelectInput = () => {
-    setSelectInputs([...selectInputs, '']);
-  };
-
-  const handleSubmit = () => {
-    const formData = {
-      textInputs,
-      selectInputs,
+        // Add the new ArgumentPaper to the state
+        setArgumentPapers((prevArgumentPapers) => [...prevArgumentPapers, newArgumentPaper,]);
     };
 
-    // Send a POST request to localhost:8080/process with formData
-    fetch('http://localhost:8080/process', {
-      method: 'POST',
-      body: JSON.stringify(formData),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log(data); // You can handle the response here
+    const handleValueChange = (key) => (field, value) => {
+        // Update the values state with the values from each ArgumentPaper
+        setValues((prevValues) => ({
+            ...prevValues, [key]: {
+                ...prevValues[key], [field]: value,
+            },
+        }));
+    };
+
+
+    const handleTextInputChange = (e, index) => {
+        const newInputs = [...textInputs];
+        newInputs[index] = e.target.value;
+        setTextInputs(newInputs);
+    };
+
+    const addTextInput = () => {
+        setTextInputs([...textInputs, '']);
+    };
+
+    const handleSelectInputChange = (e, index) => {
+        const newInputs = [...selectInputs];
+        newInputs[index] = e.target.value;
+        setSelectInputs(newInputs);
+    };
+
+    const addSelectInput = () => {
+        setSelectInputs([...selectInputs, '']);
+    };
+
+    const handleSubmit = () => {
+        const formData = {
+            textInputs, selectInputs,
+        };
+
+        // Send a POST request to localhost:8080/process with formData
+        fetch('http://localhost:8080/process', {
+            method: 'POST', body: JSON.stringify(formData), headers: {
+                'Content-Type': 'application/json',
+            },
         })
-        .catch((error) => {
-          console.error('Error:', error);
-        });
-  };
+            .then((response) => response.json())
+            .then((data) => {
+                console.log(data); // You can handle the response here
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    };
 
-  return (
-      <div className="App">
+    const [selectors, setSelectors] = useState([]);
+    const [inputValues, setInputValues] = useState([]);
+
+    const handleAddSelector = () => {
+        setSelectors([...selectors, <EntitySelector key={selectors.length} onAddSelector={handleAddSelector}
+                                                    onInputChange={handleInputChange}/>]);
+    };
+
+    const handleInputChange = (values) => {
+        setInputValues([...inputValues, values]);
+    };
+
+
+    return (<div className="App">
         <form>
-          <div>
-            <TextField
-                label="Text Input"
-                variant="outlined"
-                multiline
-                rows={4}
-            />
-          </div>
+            <Box flexDirection={"row"} display={"column"}>
+                <Box>
+                    <Box m={2} flexDirection={"column"} display={"flex"}>
+                        <label>This is the main expression, which will be calculated via Math Framework</label>
+                        <TextField
+                            label="Text Input"
+                            variant="outlined"
+                            multiline
+                            rows={4}
+                        />
+                    </Box>
+                </Box>
 
-          {textInputs.map((input, index) => (
-              <div key={index}>
-                <TextField
-                    label="Additional Text Input"
-                    variant="outlined"
-                    value={input}
-                    onChange={(e) => handleTextInputChange(e, index)}
-                />
-              </div>
-          ))}
+                <Box>
+                    <label>There are additional inputs for arguments</label>
+                    <Box>
+                        <Button onClick={addArgumentPaper} variant="contained">
+                            Add Argument
+                        </Button>
+                        {/* Render dynamically added ArgumentPaper components */}
+                        <Box m={2} display="flex" flexWrap="wrap">
+                            {argumentPapers.map((arg, index) => (
+                                <Box key={index} m={2} width="25%"> {/* Set width to control max per row */}
+                                    {arg}
+                                </Box>
+                            ))}
+                        </Box>
+                        {/* Display the values received from all ArgumentPaper components */}
+                        <Box m={2}>{JSON.stringify(values, null, 2)}</Box>
+                    </Box>
+                </Box>
 
-          <Button variant="contained" color="primary" onClick={addTextInput}>
-            Add Text Input
-          </Button>
+                <Divider light/>
+                <Box>
+                    <h6>Entity Selectors:</h6>
+                    <Button onClick={handleAddSelector} variant="contained" color="primary">
+                        Add Entity Selector
+                    </Button>
+                    {selectors.map((selector) => selector)}
+                    <h6>Input Values:</h6>
+                    <pre>{JSON.stringify(inputValues, null, 2)}</pre>
+                </Box>
 
-          <div>
-            <FormControl variant="outlined">
-              <InputLabel>Select Input</InputLabel>
-              <Select label="Select Input">
-                {selectInputs.map((input, index) => (
-                    <MenuItem key={index} value={input}>
-                      {input}
-                    </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </div>
-
-          {selectInputs.map((input, index) => (
-              <div key={index}>
-                <FormControl variant="outlined">
-                  <InputLabel>Additional Select Input</InputLabel>
-                  <Select
-                      label="Additional Select Input"
-                      value={input}
-                      onChange={(e) => handleSelectInputChange(e, index)}
-                  >
-                    {selectInputs.map((option, idx) => (
-                        <MenuItem key={idx} value={option}>
-                          {option}
-                        </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </div>
-          ))}
-
-          <Button variant="contained" color="primary" onClick={addSelectInput}>
-            Add Select Input
-          </Button>
-
-          <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSubmit}
-              style={{ marginTop: '20px' }}
-          >
-            Submit
-          </Button>
+                <Box m={2}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleSubmit}
+                        style={{marginTop: '20px'}}>
+                        Submit
+                    </Button>
+                </Box>
+            </Box>
         </form>
-      </div>
-  );
+        <Box m={2}>
+            <ModelList/>
+        </Box>
+
+    </div>);
 }
 
 export default App;
