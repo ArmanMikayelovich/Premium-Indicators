@@ -1,9 +1,22 @@
-import React, { useState } from 'react';
-import { Box, Button, TextField, Select, MenuItem } from '@mui/material';
+import React, {useEffect, useState} from 'react';
+import {Box, Button, MenuItem, Select, TextField} from '@mui/material';
 
-const EntitySelector = ({ onAddBox, onInputChange }) => {
+const EntitySelector = ({onAddBox, onInputChange, endpoint}) => {
     const [selectValue, setSelectValue] = useState('');
     const [textValue, setTextValue] = useState('');
+    const [options, setOptions] = useState([]);
+
+    useEffect(() => {
+        // Fetch options from the API when the component mounts
+        fetch(endpoint)
+            .then((response) => response.json())
+            .then((data) => {
+                setOptions(data);
+            })
+            .catch((error) => {
+                console.error('Error fetching options:', error);
+            });
+    }, [endpoint]);
 
     const handleAddBox = () => {
         onAddBox();
@@ -22,9 +35,11 @@ const EntitySelector = ({ onAddBox, onInputChange }) => {
     return (
         <Box display="flex" alignItems="center">
             <Select value={selectValue} onChange={handleSelectChange}>
-                <MenuItem value="option1">Option 1</MenuItem>
-                <MenuItem value="option2">Option 2</MenuItem>
-                {/* Add more options as needed */}
+                {Object.keys(options).map((option) => (
+                    <MenuItem key={option.key} value={option.value}>
+                        {option.label}
+                    </MenuItem>
+                ))}
             </Select>
             <TextField
                 value={textValue}

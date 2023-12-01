@@ -9,19 +9,27 @@ import Divider from '@mui/material/Divider';
 
 
 function App() {
-    const [textInputs, setTextInputs] = useState(['']);
-    const [selectInputs, setSelectInputs] = useState(['']);
+
+    const [mainExpression, setMainExpression] = useState('');
+
 
     const [argumentPapers, setArgumentPapers] = useState([]); // State to store ArgumentPaper components
-    const [values, setValues] = useState({}); // State to store values
+    const [argumentValues, setArgumentValues] = useState({}); // State to store argumentValues
+
+    const [selectors, setSelectors] = useState([]);
+    const [entitySelectorValues, setEntitySelectorValues] = useState([]);
+
+    const handleMainExpressionChange = (event) => {
+        setMainExpression(event.target.value);
+    };
 
     const addArgumentPaper = () => {
         // Generate a unique key for each ArgumentPaper
         const key = `argument-${Date.now()}`;
-        const newArgumentPaper = (<ArgumentPaper key={key} onValueChange={handleValueChange(key)}/>);
+        const newArgumentPaper = (<ArgumentPaper key={key} onValueChange={handleArgumentValueChange(key)}/>);
 
-        // Update the values state with an empty object for the new ArgumentPaper
-        setValues((prevValues) => ({
+        // Update the argumentValues state with an empty object for the new ArgumentPaper
+        setArgumentValues((prevValues) => ({
             ...prevValues, [key]: {},
         }));
 
@@ -29,9 +37,9 @@ function App() {
         setArgumentPapers((prevArgumentPapers) => [...prevArgumentPapers, newArgumentPaper,]);
     };
 
-    const handleValueChange = (key) => (field, value) => {
-        // Update the values state with the values from each ArgumentPaper
-        setValues((prevValues) => ({
+    const handleArgumentValueChange = (key) => (field, value) => {
+        // Update the argumentValues state with the argumentValues from each ArgumentPaper
+        setArgumentValues((prevValues) => ({
             ...prevValues, [key]: {
                 ...prevValues[key], [field]: value,
             },
@@ -39,70 +47,51 @@ function App() {
     };
 
 
-    const handleTextInputChange = (e, index) => {
-        const newInputs = [...textInputs];
-        newInputs[index] = e.target.value;
-        setTextInputs(newInputs);
-    };
-
-    const addTextInput = () => {
-        setTextInputs([...textInputs, '']);
-    };
-
-    const handleSelectInputChange = (e, index) => {
-        const newInputs = [...selectInputs];
-        newInputs[index] = e.target.value;
-        setSelectInputs(newInputs);
-    };
-
-    const addSelectInput = () => {
-        setSelectInputs([...selectInputs, '']);
-    };
-
-    const handleSubmit = () => {
-        const formData = {
-            textInputs, selectInputs,
-        };
-
-        // Send a POST request to localhost:8080/process with formData
-        fetch('http://localhost:8080/process', {
-            method: 'POST', body: JSON.stringify(formData), headers: {
-                'Content-Type': 'application/json',
-            },
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                console.log(data); // You can handle the response here
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-    };
-
-    const [selectors, setSelectors] = useState([]);
-    const [inputValues, setInputValues] = useState([]);
-
     const handleAddSelector = () => {
-        setSelectors([...selectors, <EntitySelector key={selectors.length} onAddSelector={handleAddSelector}
-                                                    onInputChange={handleInputChange}/>]);
+        setSelectors([...selectors, <EntitySelector key={selectors.length}
+                                                    onAddSelector={handleAddSelector}
+                                                    onInputChange={handleInputChange}
+                                                    endpoint={'http://localhost:8080/allModels'}/>]);
     };
 
     const handleInputChange = (values) => {
-        setInputValues([...inputValues, values]);
+        setEntitySelectorValues([...entitySelectorValues, values]);
     };
+
+    const handleSubmit = () => {
+        let formData = [mainExpression, argumentValues, entitySelectorValues];
+        console.log('formData', formData);
+        // Send a POST request to localhost:8080/process with formData
+        // fetch('http://localhost:8080/process', {
+        //     method: 'POST', body: JSON.stringify(formData), headers: {
+        //         'Content-Type': 'application/json',
+        //     },
+        // })
+        //     .then((response) => response.json())
+        //     .then((data) => {
+        //         console.log(data); // You can handle the response here
+        //     })
+        //     .catch((error) => {
+        //         console.error('Error:', error);
+        //     });
+    };
+
+
 
 
     return (<div className="App">
         <form>
             <Box flexDirection={"row"} display={"column"}>
                 <Box>
-                    <Box m={2} flexDirection={"column"} display={"flex"}>
+                    <Box m={2} flexDirection="column" display="flex">
                         <label>This is the main expression, which will be calculated via Math Framework</label>
                         <TextField
                             label="Text Input"
                             variant="outlined"
                             multiline
                             rows={4}
+                            value={mainExpression}
+                            onChange={handleMainExpressionChange}
                         />
                     </Box>
                 </Box>
@@ -121,8 +110,8 @@ function App() {
                                 </Box>
                             ))}
                         </Box>
-                        {/* Display the values received from all ArgumentPaper components */}
-                        <Box m={2}>{JSON.stringify(values, null, 2)}</Box>
+                        {/* Display the argumentValues received from all ArgumentPaper components */}
+                        <Box m={2}>{JSON.stringify(argumentValues, null, 2)}</Box>
                     </Box>
                 </Box>
 
@@ -134,7 +123,7 @@ function App() {
                     </Button>
                     {selectors.map((selector) => selector)}
                     <h6>Input Values:</h6>
-                    <pre>{JSON.stringify(inputValues, null, 2)}</pre>
+                    <pre>{JSON.stringify(entitySelectorValues, null, 2)}</pre>
                 </Box>
 
                 <Box m={2}>
